@@ -4,12 +4,6 @@
 
 ---
 
-## 🚀 Live Demo
-
-👉 **[Open SlotSync](https://9599602428sid-lgtm.github.io/slotsync/)** *(update link after GitHub Pages deploy)*
-
----
-
 ## ✨ Features
 
 | Feature | Description |
