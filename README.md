@@ -26,11 +26,6 @@
 
 ---
 
-## 🖼️ Screenshots
-
-> *(Add screenshots here after deploying — use `docs/screenshots/` folder)*
-
----
 
 ## 🛠️ How It Works
 
@@ -146,9 +141,7 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 ## 👨‍💻 Author
 
 **Siddhant** — Finance & Operations + Cloud Automation  
-🔗 [GitHub](https://github.com/9599602428sid-lgtm) · [LinkedIn](https://linkedin.com/in/) *(add your LinkedIn)*
+🔗 [GitHub](https://github.com/9599602428sid-lgtm) · [LinkedIn](www.linkedin.com/in/siddhant-suri-856a75315)
 
----
-
-> Built as part of a 48-hour AI automation internship assessment.  
-> Deployed on [Netlify](https://netlify.com) · Zero backend · 100% client-side.
+---  
+> Deployed on [Netlify](https://jazzy-trifle-e8a7b5.netlify.app/)) · Zero backend · 100% client-side.
