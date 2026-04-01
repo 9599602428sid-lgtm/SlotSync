@@ -135,7 +135,7 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 ## 👨‍💻 Author
 
 **Siddhant** — Finance & Operations + Cloud Automation  
-🔗 [GitHub](https://github.com/9599602428sid-lgtm) · [LinkedIn](www.linkedin.com/in/siddhant-suri-856a75315)
+🔗 [GitHub](https://github.com/9599602428sid-lgtm) · [LinkedIn](www.linkedin.com/in/siddhant-suri-856a75315) · [Gmail](9599602428sid@gmail.com)
 
 ---  
 > Deployed on [Netlify](https://jazzy-trifle-e8a7b5.netlify.app/)) · Zero backend · 100% client-side.
