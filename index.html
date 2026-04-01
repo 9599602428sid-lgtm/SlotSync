@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlotSync — Interview Scheduling</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Geist+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f4f0;--white:#fff;--ink:#111;--ink2:#444;--ink3:#888;
+  --border:#e2e0da;--orange:#ff5c00;--ol:#fff2eb;--om:#ffe0cc;
+  --green:#00a86b;--gl:#e6f7f1;--red:#e53e3e;--rl:#fff5f5;
+  --blue:#2563eb;--bl:#eff6ff;
+  --s1:0 1px 3px rgba(0,0,0,.08);--s2:0 4px 16px rgba(0,0,0,.10);--r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Lato',sans-serif;min-height:100vh}
+
+/* NAV */
+.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--s1)}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.03em}
+.nav-logo span{color:var(--orange)}
+.nav-pill{background:var(--ol);color:var(--orange);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:100px;font-family:'Geist Mono',monospace}
+
+/* PAGE */
+.page{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+.page-header{margin-bottom:28px;animation:fadeUp .5s ease both}
+.page-header h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(24px,3.5vw,38px);letter-spacing:-.03em;line-height:1.1;margin-bottom:5px}
+.page-header h1 mark{background:none;color:var(--orange)}
+.page-header p{color:var(--ink3);font-size:13px;font-weight:300}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center;margin-bottom:28px;animation:fadeUp .5s .08s ease both}
+.step{display:flex;align-items:center;gap:7px}
+.step-num{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;color:var(--ink3);transition:all .3s;flex-shrink:0}
+.step-num.active{border-color:var(--orange);color:var(--orange);background:var(--ol)}
+.step-num.done{border-color:var(--green);background:var(--green);color:#fff}
+.step-text{font-size:12px;color:var(--ink3);transition:color .3s}
+.step-text.active{color:var(--ink);font-weight:700}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 12px;min-width:24px}
+
+/* PANEL */
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--s1)}
+.panel-hd{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+.p-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.p-icon.or{background:var(--ol)}
+.p-icon.bl{background:var(--bl)}
+.p-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
+.p-sub{font-size:11px;color:var(--ink3);margin-top:1px}
+
+/* FIELDS */
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field>label,.flabel{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+input[type="text"],select,input[type="date"],input[type="time"]{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;color:var(--ink);font-family:'Lato',sans-serif;font-size:13px;padding:8px 11px;outline:none;transition:border-color .2s,box-shadow .2s}
+input[type="text"]:focus,select:focus,input[type="date"]:focus,input[type="time"]:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,92,0,.08);background:var(--white)}
+input::placeholder{color:#bbb}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.5}
+
+/* CANDIDATE CARDS */
+.cands-section{margin-bottom:18px}
+.cands-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cands-title{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;display:flex;align-items:center;gap:7px}
+.cnt-badge{background:var(--ol);color:var(--orange);border:1px solid var(--om);border-radius:100px;font-size:10px;font-weight:700;padding:2px 9px;font-family:'Geist Mono',monospace}
+
+.cand-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:12px;box-shadow:var(--s1);animation:fadeUp .3s ease both;position:relative}
+.cand-card-top{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.cand-num{width:24px;height:24px;border-radius:50%;background:var(--ol);border:1.5px solid var(--om);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;color:var(--orange);flex-shrink:0}
+.cand-lbl{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;flex:1}
+.cand-rm{background:none;border:none;cursor:pointer;color:#ccc;font-size:18px;line-height:1;padding:2px 5px;border-radius:4px;transition:color .2s}
+.cand-rm:hover{color:var(--red)}
+.cand-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:520px){.cand-meta{grid-template-columns:1fr}}
+
+/* AVAILABILITY ROWS */
+.avail-col-hd{display:grid;grid-template-columns:1.3fr 1fr 1fr 26px;gap:7px;margin-bottom:4px}
+.ach{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.avail-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:7px}
+.avail-row{display:grid;grid-template-columns:1.3fr 1fr 1fr 26px;gap:7px;align-items:center}
+.ai{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;color:var(--ink);font-family:'Lato',sans-serif;font-size:12px;padding:7px 9px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.ai:focus{border-color:var(--orange);box-shadow:0 0 0 2px rgba(255,92,0,.07);background:var(--white)}
+.ai[type="time"]{font-family:'Geist Mono',monospace;font-size:12px}
+input[type="date"].ai::-webkit-calendar-picker-indicator,
+input[type="time"].ai::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.5}
+.ai-rm{background:none;border:none;cursor:pointer;color:#ccc;font-size:15px;line-height:1;padding:0;transition:color .2s;text-align:center;width:26px}
+.ai-rm:hover{color:var(--red)}
+.add-avail-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:1.5px dashed var(--om);border-radius:7px;color:var(--orange);font-size:11px;font-weight:700;font-family:'Lato',sans-serif;padding:5px 11px;cursor:pointer;transition:all .2s}
+.add-avail-btn:hover{background:var(--ol);border-color:var(--orange)}
+
+.add-cand-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:2px dashed var(--border);border-radius:var(--r);color:var(--ink3);font-size:13px;font-family:'Lato',sans-serif;font-weight:700;padding:13px;cursor:pointer;width:100%;transition:all .2s}
+.add-cand-btn:hover{border-color:var(--orange);color:var(--orange);background:var(--ol)}
+
+/* INTERVIEWERS */
+.iv-list{display:flex;flex-direction:column;gap:9px;margin-bottom:10px}
+.iv-block{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:13px 15px;animation:fadeUp .25s ease both;transition:border-color .2s}
+.iv-block:hover{border-color:#ccc}
+.iv-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.iv-idx{width:20px;height:20px;background:var(--bl);border:1px solid #bfdbfe;border-radius:50%;font-family:'Geist Mono',monospace;font-size:9px;font-weight:700;color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.iv-name-in{flex:1;background:transparent;border:none;border-bottom:1.5px solid var(--border);border-radius:0;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;color:var(--ink);padding:2px 0;outline:none;transition:border-color .2s}
+.iv-name-in:focus{border-color:var(--orange);box-shadow:none;background:transparent}
+.iv-name-in::placeholder{color:#bbb;font-weight:400}
+.iv-rm{background:none;border:none;cursor:pointer;color:#ccc;font-size:17px;line-height:1;padding:2px 4px;border-radius:3px;transition:color .2s;flex-shrink:0}
+.iv-rm:hover{color:var(--red)}
+.iv-slot-rows{display:flex;flex-direction:column;gap:5px;margin-bottom:5px}
+.add-iv-slot{display:inline-flex;align-items:center;gap:5px;background:none;border:1.5px dashed #bfdbfe;border-radius:7px;color:var(--blue);font-size:10px;font-weight:700;font-family:'Lato',sans-serif;padding:5px 10px;cursor:pointer;transition:all .2s}
+.add-iv-slot:hover{background:var(--bl);border-color:var(--blue)}
+.add-iv-btn{display:flex;align-items:center;gap:7px;background:none;border:1.5px dashed var(--border);border-radius:8px;color:var(--ink3);font-size:12px;font-family:'Lato',sans-serif;font-weight:700;padding:9px 13px;cursor:pointer;width:100%;transition:all .2s}
+.add-iv-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--bl)}
+
+/* BOTTOM BAR */
+.bottom-bar{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--s1);animation:fadeUp .5s .18s ease both;margin-bottom:18px}
+.bb-left{flex:1}
+.bb-lbl{font-size:10px;color:var(--ink3);margin-bottom:5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.bb-left select{max-width:155px;font-size:12px;padding:7px 10px}
+.find-btn{background:var(--orange);color:#fff;border:none;border-radius:10px;padding:13px 30px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:-.01em;box-shadow:0 4px 14px rgba(255,92,0,.3)}
+.find-btn:hover{background:#e04e00;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,92,0,.35)}
+
+/* LOADING */
+.loading-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:55px 24px;text-align:center;box-shadow:var(--s1)}
+.loader{display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:16px}
+.ld{width:9px;height:9px;border-radius:50%;background:var(--orange);animation:bounce 1s ease infinite}
+.ld:nth-child(2){animation-delay:.15s}
+.ld:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.6}30%{transform:translateY(-9px);opacity:1}}
+.loading-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:5px}
+.loading-sub{font-size:11px;color:var(--ink3);font-family:'Geist Mono',monospace}
+
+/* RESULTS */
+.results-wrap{animation:fadeUp .4s ease both}
+.results-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.res-title{font-family:'Syne',sans-serif;font-weight:800;font-size:21px;letter-spacing:-.02em}
+.res-meta{font-size:11px;color:var(--ink3);font-family:'Geist Mono',monospace;margin-top:3px}
+.edit-btn{background:var(--bg);border:1.5px solid var(--border);color:var(--ink2);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;font-family:'Lato',sans-serif;cursor:pointer;transition:all .2s}
+.edit-btn:hover{border-color:var(--orange);color:var(--orange)}
+
+/* CANDIDATE RESULTS TABS */
+.cand-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.ctab{padding:7px 16px;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--ink3);transition:all .2s;font-family:'Lato',sans-serif}
+.ctab:hover{border-color:var(--orange);color:var(--orange)}
+.ctab.active{background:var(--orange);border-color:var(--orange);color:#fff}
+
+.cand-result-block{display:none}
+.cand-result-block.active{display:block}
+
+.slots-list{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.slot-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r);padding:18px 20px;display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:14px;cursor:pointer;transition:all .2s;animation:fadeUp .35s ease both;position:relative}
+.slot-card:hover{border-color:#bbb;box-shadow:var(--s2);transform:translateY(-1px)}
+.slot-card.best{border-color:var(--orange);background:var(--ol)}
+.slot-card.picked{border-color:var(--green);background:var(--gl);box-shadow:0 0 0 3px rgba(0,168,107,.1)}
+.slot-card:nth-child(1){animation-delay:.04s}
+.slot-card:nth-child(2){animation-delay:.10s}
+.slot-card:nth-child(3){animation-delay:.16s}
+
+.s-rank{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:700;background:var(--bg);border:1.5px solid var(--border);color:var(--ink3);flex-shrink:0;margin-top:1px}
+.slot-card.best  .s-rank{background:var(--orange);border-color:var(--orange);color:#fff}
+.slot-card.picked .s-rank{background:var(--green);border-color:var(--green);color:#fff}
+
+.s-body{}
+.s-time{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.02em;margin-bottom:3px}
+.s-date{font-size:11px;color:var(--ink3);font-family:'Geist Mono',monospace;margin-bottom:10px}
+.s-tags{display:flex;gap:5px;flex-wrap:wrap}
+.stag{font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px;border:1px solid;font-family:'Lato',sans-serif;letter-spacing:.02em}
+.stag.or{background:var(--ol);border-color:var(--om);color:var(--orange)}
+.stag.gr{background:var(--bg);border-color:var(--border);color:var(--ink3)}
+
+.s-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.s-cov{font-family:'Geist Mono',monospace;font-size:20px;font-weight:500;color:var(--orange);line-height:1}
+.s-cov-lbl{font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.sel-btn{background:var(--white);border:1.5px solid var(--border);color:var(--ink2);border-radius:7px;padding:6px 13px;font-size:11px;font-weight:700;font-family:'Lato',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
+.sel-btn:hover{border-color:var(--green);color:var(--green)}
+.slot-card.picked .sel-btn{background:var(--green);border-color:var(--green);color:#fff}
+
+/* NO SLOTS */
+.no-slots{background:var(--rl);border:1.5px solid #fca5a5;border-radius:10px;padding:16px 18px;color:var(--red);font-size:13px}
+
+/* CONFLICTS */
+.conflicts-box{background:#fffbf0;border:1.5px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.conf-hd{font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.conf-item{font-size:12px;color:#78350f;padding:3px 0;display:flex;gap:7px}
+.conf-item::before{content:'—';color:#fbbf24;flex-shrink:0}
+
+/* REC BOX */
+.rec-box{background:var(--bl);border:1.5px solid #bfdbfe;border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.rec-hd{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;font-family:'Geist Mono',monospace}
+.rec-body{font-size:13px;color:#1e40af;line-height:1.65}
+
+/* CONFIRM BAR */
+.confirm-bar{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--s1);margin-bottom:18px;transition:border-color .3s}
+.confirm-bar.ready{border-color:var(--green)}
+.cbar-text{flex:1}
+.cbar-t{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.cbar-s{font-size:11px;color:var(--ink3);margin-top:2px}
+.confirm-btn{background:var(--green);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:-.01em}
+.confirm-btn:hover:not(:disabled){background:#008f59;transform:translateY(-1px)}
+.confirm-btn:disabled{background:#ccc;cursor:not-allowed}
+
+/* STEP 3 CONFIRMED */
+.confirmed-wrap{animation:fadeUp .5s ease both}
+.conf-banner{background:var(--green);border-radius:var(--r);padding:26px 24px;color:#fff;display:flex;align-items:center;gap:18px;margin-bottom:18px}
+.conf-tick{font-size:42px;flex-shrink:0;animation:bounceIn .5s ease both;display:block}
+.conf-heading{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin-bottom:3px}
+.conf-sub{font-size:13px;opacity:.85}
+
+/* MULTI-CONFIRMED TABS */
+.conf-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.conf-tab{padding:6px 14px;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--ink3);transition:all .2s;font-family:'Lato',sans-serif}
+.conf-tab:hover{border-color:var(--green);color:var(--green)}
+.conf-tab.active{background:var(--green);border-color:var(--green);color:#fff}
+.conf-block{display:none}
+.conf-block.active{display:block}
+
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:500px){.sum-grid{grid-template-columns:1fr}}
+.sum-panel{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px}
+.sum-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:5px}
+.sum-val{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-.02em}
+.sum-val.big{font-size:19px;color:var(--orange)}
+.att-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.att-chip{background:var(--gl);border:1px solid #bbf7d0;border-radius:100px;padding:3px 11px;font-size:11px;font-weight:700;color:var(--green)}
+
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+.out-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.out-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.out-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.out-item:last-child{border-bottom:none;padding-bottom:0}
+.out-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:5px}
+.out-dot.g{background:var(--green)}
+.out-dot.b{background:var(--blue)}
+.out-txt{font-size:12px;color:var(--ink);font-weight:700}
+.out-sub{font-size:11px;color:var(--ink3);margin-top:1px}
+
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+@media(max-width:420px){.acts{grid-template-columns:1fr}}
+.abt{padding:12px 14px;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;border:1.5px solid;letter-spacing:-.01em}
+.abt.pri{background:var(--orange);color:#fff;border-color:var(--orange);box-shadow:0 4px 12px rgba(255,92,0,.25)}
+.abt.pri:hover{background:#e04e00;transform:translateY(-1px)}
+.abt.grn{background:#fff;color:var(--green);border-color:#bbf7d0}
+.abt.grn:hover{background:var(--gl)}
+.abt.out{background:#fff;color:var(--ink2);border-color:var(--border)}
+.abt.out:hover{border-color:var(--orange);color:var(--orange)}
+
+.email-box{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:16px 18px}
+.email-hd{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;font-family:'Geist Mono',monospace}
+.email-body{font-size:11px;color:var(--ink2);line-height:1.85;white-space:pre-wrap;font-family:'Geist Mono',monospace}
+
+/* ERROR */
+.err-box{background:var(--rl);border:1.5px solid #fca5a5;border-radius:10px;padding:18px 22px;color:var(--red);font-size:13px;line-height:1.6;text-align:center}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes bounceIn{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Slot<span>Sync</span></div>
+  <div class="nav-pill">Interview Scheduler</div>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>Interview<br><mark>Scheduling</mark> Automation</h1>
+    <p>Add candidates and interviewers — the system finds best overlapping slots instantly, end to end.</p>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="step"><div class="step-num active" id="sn1">1</div><span class="step-text active" id="sl1">Set Availability</span></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num" id="sn2">2</div><span class="step-text" id="sl2">Pick Slots</span></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-num" id="sn3">3</div><span class="step-text" id="sl3">Confirmed</span></div>
+  </div>
+
+  <!-- ══════ STEP 1: FORM ══════ -->
+  <div id="formSection">
+
+    <!-- CANDIDATES -->
+    <div class="cands-section">
+      <div class="cands-top">
+        <div class="cands-title">
+          🙋 Candidates
+          <span class="cnt-badge" id="candCountBadge">1</span>
+        </div>
+      </div>
+      <div id="candList"></div>
+      <button class="add-cand-btn" onclick="addCandidate()">＋ Add Another Candidate</button>
+    </div>
+
+    <!-- INTERVIEWERS -->
+    <div class="panel" style="margin-bottom:18px;animation-delay:.1s">
+      <div class="panel-hd">
+        <div class="p-icon bl">👥</div>
+        <div>
+          <div class="p-title">Interviewers</div>
+          <div class="p-sub">Add 2–5 interviewers — shared across all candidates</div>
+        </div>
+      </div>
+      <div class="iv-list" id="ivList"></div>
+      <button class="add-iv-btn" onclick="addInterviewer()">＋ Add Interviewer</button>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="bb-left">
+        <div class="bb-lbl">Interview Duration</div>
+        <select id="duration">
+          <option value="30">30 minutes</option>
+          <option value="45" selected>45 minutes</option>
+          <option value="60">60 minutes</option>
+          <option value="90">90 minutes</option>
+        </select>
+      </div>
+      <button class="find-btn" onclick="runScheduler()">Find Best Slots →</button>
+    </div>
+  </div>
+
+  <!-- ══════ LOADING ══════ -->
+  <div id="loadingSection" class="hidden">
+    <div class="loading-wrap">
+      <div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+      <div class="loading-title">Computing slot overlaps…</div>
+      <div class="loading-sub" id="loadSub">Analysing availability across all candidates</div>
+    </div>
+  </div>
+
+  <!-- ══════ STEP 2: RESULTS ══════ -->
+  <div id="resultsSection" class="hidden">
+    <div class="results-wrap">
+      <div class="results-top">
+        <div>
+          <div class="res-title">Top Matching Slots</div>
+          <div class="res-meta" id="resMeta"></div>
+        </div>
+        <button class="edit-btn" onclick="resetForm()">← Edit Inputs</button>
+      </div>
+
+      <!-- Candidate tabs (shown if >1 candidate) -->
+      <div class="cand-tabs" id="candTabs"></div>
+
+      <!-- Per-candidate result blocks -->
+      <div id="candResults"></div>
+
+      <!-- Global confirm bar -->
+      <div class="confirm-bar" id="confirmBar">
+        <div class="cbar-text">
+          <div class="cbar-t" id="cbarT">No slots selected</div>
+          <div class="cbar-s" id="cbarS">Select a slot for each candidate above</div>
+        </div>
+        <button class="confirm-btn" id="confirmBtn" onclick="confirmAll()" disabled>Confirm All →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ STEP 3: CONFIRMED ══════ -->
+  <div id="confirmedSection" class="hidden">
+    <div class="confirmed-wrap">
+      <div class="conf-banner">
+        <span class="conf-tick">✅</span>
+        <div>
+          <div class="conf-heading" id="confHeading">Interviews Scheduled!</div>
+          <div class="conf-sub" id="confSub"></div>
+        </div>
+      </div>
+
+      <!-- Confirmed candidate tabs -->
+      <div class="conf-tabs" id="confTabs"></div>
+      <div id="confBlocks"></div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="errorSection" class="hidden">
+    <div class="panel">
+      <div class="err-box" id="errMsg"></div>
+      <button class="edit-btn" style="margin-top:12px;width:100%" onclick="resetForm()">← Try Again</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let candData  = [];   // [{id, name, role, avails:[{date,from,to}]}]
+let ivData    = [];   // [{name, avails:[{date,from,to}]}]
+let allResults= [];   // per-candidate results
+let selections= {};   // candId -> slot object
+let cCount=0, iCount=0, aCount=0;
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+function show(id){document.getElementById(id).classList.remove("hidden")}
+function hide(id){document.getElementById(id).classList.add("hidden")}
+
+// Convert "HH:MM" 24h to minutes-since-midnight
+function toMins(t){ const[h,m]=t.split(":").map(Number); return h*60+m; }
+
+// Format minutes-since-midnight → 12h string
+function minsTo12(m){
+  const h=Math.floor(m/60), mn=m%60;
+  const ampm=h>=12?"PM":"AM";
+  const hr=h%12||12;
+  return `${hr}:${String(mn).padStart(2,"0")} ${ampm}`;
+}
+
+// Format a date string (yyyy-mm-dd) → "Mon, Mar 25"
+function fmtDate(d){
+  const dt=new Date(d+"T00:00:00");
+  return dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+}
+
+// Overlap in minutes between two [start,end] pairs (in mins)
+function overlap(s1,e1,s2,e2){ return Math.max(0, Math.min(e1,e2)-Math.max(s1,s2)); }
+
+// ═══════════════════════════════════════════════════
+// CANDIDATES
+// ═══════════════════════════════════════════════════
+function addCandidate(){
+  cCount++;
+  const id="c"+cCount;
+  const obj={id, name:"", role:"", avails:[]};
+  candData.push(obj);
+  const idx=candData.length-1;
+
+  const div=document.createElement("div");
+  div.className="cand-card"; div.id="ccard_"+id;
+  div.innerHTML=`
+    <div class="cand-card-top">
+      <div class="cand-num">${candData.length}</div>
+      <div class="cand-lbl">Candidate ${candData.length}</div>
+      ${candData.length>1?`<button class="cand-rm" onclick="removeCandidate('${id}')">×</button>`:""}
+    </div>
+    <div class="cand-meta">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" placeholder="e.g. Priya Sharma" oninput="candData[${idx}].name=this.value">
+      </div>
+      <div class="field">
+        <label>Role Applied For</label>
+        <input type="text" placeholder="e.g. Product Manager" oninput="candData[${idx}].role=this.value">
+      </div>
+    </div>
+    <div>
+      <div class="avail-col-hd">
+        <div class="ach">Date</div><div class="ach">From</div><div class="ach">To</div><div></div>
+      </div>
+      <div class="avail-rows" id="avrows_${id}"></div>
+      <button class="add-avail-btn" onclick="addCandAvail('${id}')">＋ Add window</button>
+    </div>`;
+  document.getElementById("candList").appendChild(div);
+  addCandAvail(id); // one blank row
+  updateCandBadge();
+}
+
+function removeCandidate(id){
+  document.getElementById("ccard_"+id)?.remove();
+  candData=candData.filter(c=>c.id!==id);
+  updateCandBadge();
+}
+
+function updateCandBadge(){
+  document.getElementById("candCountBadge").textContent=document.querySelectorAll(".cand-card").length;
+}
+
+function addCandAvail(candId, date="", from="", to=""){
+  aCount++;
+  const rowId="ca_"+aCount;
+  const div=document.createElement("div");
+  div.innerHTML=`
+    <div class="avail-row" id="${rowId}">
+      <input type="date" class="ai" value="${date}">
+      <input type="time" class="ai" value="${from}">
+      <input type="time" class="ai" value="${to}">
+      <button class="ai-rm" onclick="document.getElementById('${rowId}').remove()">×</button>
+    </div>`;
+  document.getElementById("avrows_"+candId).appendChild(div.firstElementChild);
+}
+
+// Collect avail from a candidate card DOM
+function collectCandAvails(candId){
+  const rows=document.querySelectorAll(`#avrows_${candId} .avail-row`);
+  const result=[];
+  rows.forEach(row=>{
+    const ins=row.querySelectorAll("input");
+    const date=ins[0].value, from=ins[1].value, to=ins[2].value;
+    if(date&&from&&to) result.push({date,from:toMins(from),to:toMins(to)});
+  });
+  return result;
+}
+
+// ═══════════════════════════════════════════════════
+// INTERVIEWERS
+// ═══════════════════════════════════════════════════
+function addInterviewer(name="", avails=[]){
+  iCount++;
+  const id="iv"+iCount;
+  const obj={name:"", avails:[]};
+  ivData.push(obj);
+  const idx=ivData.length-1;
+
+  const div=document.createElement("div");
+  div.className="iv-block"; div.id="ivb_"+id;
+  div.innerHTML=`
+    <div class="iv-top">
+      <div class="iv-idx">${ivData.length}</div>
+      <input class="iv-name-in" type="text" placeholder="Name & role" value="${name}"
+        oninput="ivData[${idx}].name=this.value">
+      <button class="iv-rm" onclick="removeIV('${id}',${idx})">×</button>
+    </div>
+    <div class="avail-col-hd">
+      <div class="ach">Date</div><div class="ach">From</div><div class="ach">To</div><div></div>
+    </div>
+    <div class="iv-slot-rows" id="ivrows_${id}"></div>
+    <button class="add-iv-slot" onclick="addIVSlot('${id}')">＋ Add window</button>`;
+  document.getElementById("ivList").appendChild(div);
+
+  if(avails.length){
+    avails.forEach(a=>addIVSlot(id,a.date,a.from,a.to));
+  } else {
+    addIVSlot(id);
+  }
+}
+
+function removeIV(domId, dataIdx){
+  document.getElementById("ivb_"+domId)?.remove();
+  ivData.splice(dataIdx,1);
+  document.querySelectorAll(".iv-idx").forEach((el,i)=>el.textContent=i+1);
+}
+
+function addIVSlot(ivId, date="", from="", to=""){
+  aCount++;
+  const rowId="iv_ar_"+aCount;
+  const div=document.createElement("div");
+  div.innerHTML=`
+    <div class="avail-row" id="${rowId}">
+      <input type="date" class="ai" value="${date}">
+      <input type="time" class="ai" value="${from}">
+      <input type="time" class="ai" value="${to}">
+      <button class="ai-rm" onclick="document.getElementById('${rowId}').remove()">×</button>
+    </div>`;
+  document.getElementById("ivrows_"+ivId).appendChild(div.firstElementChild);
+}
+
+// Collect interviewer avails from DOM
+function collectIVAvails(){
+  const blocks=document.querySelectorAll(".iv-block");
+  const result=[];
+  blocks.forEach((block,i)=>{
+    const name=block.querySelector(".iv-name-in").value.trim();
+    const rows=block.querySelectorAll(".avail-row");
+    const avails=[];
+    rows.forEach(row=>{
+      const ins=row.querySelectorAll("input");
+      const date=ins[0].value, from=ins[1].value, to=ins[2].value;
+      if(date&&from&&to) avails.push({date,from:toMins(from),to:toMins(to)});
+    });
+    if(name&&avails.length) result.push({name,avails});
+  });
+  return result;
+}
+
+// ═══════════════════════════════════════════════════
+// CORE OVERLAP LOGIC
+// ═══════════════════════════════════════════════════
+function computeForCandidate(cAvails, ivs, durationMins){
+  const slots=[], conflicts=[];
+
+  for(let i=0;i<ivs.length;i++){
+    for(let j=i+1;j<ivs.length;j++){
+      // Find matching dates between cand, iv[i], iv[j]
+      const datesI=ivs[i].avails.map(a=>a.date);
+      const datesJ=ivs[j].avails.map(a=>a.date);
+      const datesC=cAvails.map(a=>a.date);
+
+      // Common dates across all three
+      const commonDates=datesC.filter(d=>datesI.includes(d)&&datesJ.includes(d));
+
+      if(commonDates.length===0){
+        conflicts.push(`No common dates between ${ivs[i].name||"Interviewer "+(i+1)} & ${ivs[j].name||"Interviewer "+(j+1)}`);
+        continue;
+      }
+
+      commonDates.forEach(date=>{
+        const cSlots =cAvails.filter(a=>a.date===date);
+        const iSlots=ivs[i].avails.filter(a=>a.date===date);
+        const jSlots=ivs[j].avails.filter(a=>a.date===date);
+
+        cSlots.forEach(cs=>{
+          iSlots.forEach(is=>{
+            jSlots.forEach(js=>{
+              // Triple overlap
+              const start=Math.max(cs.from,is.from,js.from);
+              const end  =Math.min(cs.to,  is.to,  js.to);
+              if(end-start >= durationMins){
+                // Check bonus interviewers on same date/window
+                let extra=[];
+                for(let k=0;k<ivs.length;k++){
+                  if(k===i||k===j) continue;
+                  const kSlots=ivs[k].avails.filter(a=>a.date===date);
+                  if(kSlots.some(ks=>Math.min(ks.to,end)-Math.max(ks.from,start)>=durationMins)){
+                    extra.push(ivs[k].name||"Interviewer "+(k+1));
+                  }
+                }
+                const allPresent=[
+                  ivs[i].name||"Interviewer "+(i+1),
+                  ivs[j].name||"Interviewer "+(j+1),
+                  ...extra
+                ];
+                slots.push({
+                  date,
+                  start, end,
+                  duration: end-start,
+                  coverage: Math.round(allPresent.length/ivs.length*100),
+                  interviewers: allPresent,
+                  pair: `${ivs[i].name||"Interviewer "+(i+1)} & ${ivs[j].name||"Interviewer "+(j+1)}`
+                });
+              }
+            });
+          });
+        });
+      });
+    }
+  }
+
+  // Sort best first: coverage desc, then duration desc
+  slots.sort((a,b)=>b.coverage-a.coverage||b.duration-a.duration);
+
+  // Deduplicate same date+start+end
+  const seen=new Set();
+  const unique=slots.filter(s=>{
+    const k=s.date+s.start+s.end;
+    if(seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+
+  return {slots:unique.slice(0,3), conflicts};
+}
+
+// ═══════════════════════════════════════════════════
+// STEPPER
+// ═══════════════════════════════════════════════════
+function setStep(n){
+  [1,2,3].forEach(i=>{
+    const num=document.getElementById("sn"+i);
+    const lbl=document.getElementById("sl"+i);
+    num.className="step-num"+(i<n?" done":i===n?" active":"");
+    lbl.className="step-text"+(i===n?" active":"");
+    num.textContent=i<n?"✓":i;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// LOADING
+// ═══════════════════════════════════════════════════
+const lMsgs=["Analysing availability across all candidates","Finding date overlaps","Computing coverage scores","Ranking slots by optimality","Preparing results"];
+let lIdx=0,lTimer;
+function startLoader(){
+  lIdx=0; document.getElementById("loadSub").textContent=lMsgs[0];
+  lTimer=setInterval(()=>{ lIdx=(lIdx+1)%lMsgs.length; document.getElementById("loadSub").textContent=lMsgs[lIdx]; },1000);
+}
+function stopLoader(){ clearInterval(lTimer); }
+
+// ═══════════════════════════════════════════════════
+// RUN
+// ═══════════════════════════════════════════════════
+function runScheduler(){
+  // Sync cand data from DOM
+  const ccards=document.querySelectorAll(".cand-card");
+  ccards.forEach((card,ci)=>{
+    if(ci>=candData.length) return;
+    const ins=card.querySelectorAll("input[type='text']");
+    candData[ci].name=ins[0].value.trim();
+    candData[ci].role=ins[1].value.trim();
+    candData[ci].avails=collectCandAvails(candData[ci].id);
+  });
+
+  const ivs=collectIVAvails();
+  const duration=parseInt(document.getElementById("duration").value);
+
+  // Validate
+  for(let i=0;i<candData.length;i++){
+    const c=candData[i];
+    if(!c.name){ alert(`Please enter name for Candidate ${i+1}.`); return; }
+    if(!c.role){ alert(`Please enter role for ${c.name}.`); return; }
+    if(!c.avails.length){ alert(`Please add at least one availability window for ${c.name}.`); return; }
+  }
+  if(ivs.length<2){ alert("Please add at least 2 interviewers with availability windows."); return; }
+
+  selections={};
+  hide("formSection"); hide("errorSection"); hide("resultsSection"); hide("confirmedSection");
+  show("loadingSection"); setStep(2); startLoader();
+
+  setTimeout(()=>{
+    try{
+      allResults=candData.map(c=>({
+        cand:c,
+        ...computeForCandidate(c.avails, ivs, duration)
+      }));
+      stopLoader(); hide("loadingSection");
+      renderResults(duration);
+    }catch(err){
+      stopLoader(); hide("loadingSection"); show("errorSection"); setStep(1);
+      document.getElementById("errMsg").textContent="Error: "+err.message;
+      console.error(err);
+    }
+  },1600);
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════════════════
+function renderResults(duration){
+  show("resultsSection");
+
+  const isMulti=allResults.length>1;
+  document.getElementById("resMeta").textContent=
+    `${allResults.length} candidate${allResults.length>1?"s":""} · ${ivData.length} interviewers · ${duration} min`;
+
+  // Tabs
+  const tabsEl=document.getElementById("candTabs");
+  tabsEl.innerHTML="";
+  if(isMulti){
+    allResults.forEach((r,i)=>{
+      const t=document.createElement("div");
+      t.className="ctab"+(i===0?" active":"");
+      t.textContent=r.cand.name||"Candidate "+(i+1);
+      t.onclick=()=>switchCandTab(i);
+      tabsEl.appendChild(t);
+    });
+  }
+
+  // Result blocks
+  const resEl=document.getElementById("candResults");
+  resEl.innerHTML="";
+  allResults.forEach((r,ci)=>{
+    const blk=document.createElement("div");
+    blk.className="cand-result-block"+(ci===0?" active":"");
+    blk.id="crb_"+ci;
+
+    let html="";
+
+    if(!r.slots.length){
+      html+=`<div class="no-slots">❌ No overlapping slots found for <strong>${r.cand.name}</strong>. Try expanding availability windows.</div>`;
+    } else {
+      html+=`<div class="slots-list">`;
+      r.slots.forEach((s,si)=>{
+        const isBest=si===0;
+        html+=`<div class="slot-card${isBest?" best":""}" id="sc_${ci}_${si}">
+          <div class="s-rank">${isBest?"★":si+1}</div>
+          <div class="s-body">
+            <div class="s-time">${minsTo12(s.start)} – ${minsTo12(s.end)}</div>
+            <div class="s-date">${fmtDate(s.date)}</div>
+            <div class="s-tags">
+              <div class="stag or">${Math.round(s.duration/60*10)/10}h window</div>
+              <div class="stag gr">${s.coverage}% coverage</div>
+              <div class="stag gr">${s.interviewers.join(", ")}</div>
+              ${isBest?'<div class="stag or">Top Pick</div>':""}
+            </div>
+          </div>
+          <div class="s-right">
+            <div>
+              <div class="s-cov">${s.coverage}%</div>
+              <div class="s-cov-lbl">Coverage</div>
+            </div>
+            <button class="sel-btn" id="sb_${ci}_${si}" onclick="selectSlot(${ci},${si})">Select</button>
+          </div>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+
+    // Conflicts
+    if(r.conflicts.length){
+      html+=`<div class="conflicts-box"><div class="conf-hd">⚠ Conflicts</div>`+
+        r.conflicts.map(c=>`<div class="conf-item">${c}</div>`).join("")+`</div>`;
+    }
+
+    // Rec
+    if(r.slots.length){
+      const best=r.slots[0];
+      html+=`<div class="rec-box"><div class="rec-hd">✦ Recommendation</div>
+        <div class="rec-body">Best slot for <strong>${r.cand.name}</strong> is <strong>${minsTo12(best.start)} – ${minsTo12(best.end)}</strong> on <strong>${fmtDate(best.date)}</strong> with ${best.coverage}% panel coverage (${best.interviewers.join(", ")}). This has the longest overlap window of ${Math.round(best.duration/60*10)/10}h.</div></div>`;
+    }
+
+    blk.innerHTML=html;
+    resEl.appendChild(blk);
+  });
+
+  updateConfirmBar();
+}
+
+function switchCandTab(idx){
+  document.querySelectorAll(".ctab").forEach((t,i)=>t.classList.toggle("active",i===idx));
+  document.querySelectorAll(".cand-result-block").forEach((b,i)=>b.classList.toggle("active",i===idx));
+}
+
+// ═══════════════════════════════════════════════════
+// SLOT SELECTION
+// ═══════════════════════════════════════════════════
+function selectSlot(ci, si){
+  selections[ci]=allResults[ci].slots[si];
+  // Update card UI for this candidate
+  allResults[ci].slots.forEach((_,k)=>{
+    const card=document.getElementById("sc_"+ci+"_"+k);
+    const btn =document.getElementById("sb_"+ci+"_"+k);
+    if(card){ card.classList.toggle("picked",k===si); card.classList.toggle("best",k===0&&k!==si); }
+    if(btn)  btn.textContent=k===si?"✓ Selected":"Select";
+  });
+  updateConfirmBar();
+}
+
+function updateConfirmBar(){
+  const total=allResults.length;
+  const done=Object.keys(selections).length;
+  const bar=document.getElementById("confirmBar");
+  const t=document.getElementById("cbarT");
+  const s=document.getElementById("cbarS");
+  const btn=document.getElementById("confirmBtn");
+
+  if(done===0){
+    t.textContent="No slots selected";
+    s.textContent="Select a slot for each candidate above";
+    btn.disabled=true; bar.classList.remove("ready");
+  } else if(done<total){
+    t.textContent=`${done} of ${total} candidates have a slot selected`;
+    s.textContent="Select slots for remaining candidates to proceed";
+    btn.disabled=true; bar.classList.remove("ready");
+  } else {
+    t.textContent=`All ${total} candidate${total>1?"s":""} ready to confirm`;
+    s.textContent=Object.values(selections).map((s,i)=>`${allResults[i].cand.name}: ${minsTo12(s.start)}–${minsTo12(s.end)}`).join(" · ");
+    btn.disabled=false; bar.classList.add("ready");
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// CONFIRM → STEP 3
+// ═══════════════════════════════════════════════════
+function confirmAll(){
+  if(Object.keys(selections).length<allResults.length) return;
+  hide("resultsSection"); show("confirmedSection"); setStep(3);
+
+  const duration=document.getElementById("duration").value;
+  const isMulti=allResults.length>1;
+
+  document.getElementById("confHeading").textContent=
+    isMulti?`${allResults.length} Interviews Scheduled!`:"Interview Scheduled!";
+  document.getElementById("confSub").textContent=
+    allResults.map((r,i)=>`${r.cand.name} · ${minsTo12(selections[i].start)}–${minsTo12(selections[i].end)}`).join("  |  ");
+
+  // Tabs
+  const tabsEl=document.getElementById("confTabs");
+  tabsEl.innerHTML="";
+  if(isMulti){
+    allResults.forEach((r,i)=>{
+      const t=document.createElement("div");
+      t.className="conf-tab"+(i===0?" active":"");
+      t.textContent=r.cand.name||"Candidate "+(i+1);
+      t.onclick=()=>switchConfTab(i);
+      tabsEl.appendChild(t);
+    });
+  }
+
+  // Confirmed blocks
+  const blocksEl=document.getElementById("confBlocks");
+  blocksEl.innerHTML="";
+  allResults.forEach((r,i)=>{
+    const s=selections[i];
+    const blk=document.createElement("div");
+    blk.className="conf-block"+(i===0?" active":"");
+    blk.id="cfb_"+i;
+
+    const panel=s.interviewers.join(", ");
+    const timeStr=`${minsTo12(s.start)} – ${minsTo12(s.end)}`;
+    const email=`Subject: Interview Invitation – ${r.cand.name} | ${r.cand.role}
+
+Hi Team,
+
+The interview for the ${r.cand.role} position has been confirmed. Details below.
+
+────────────────────────────────────────
+  Date      : ${fmtDate(s.date)}
+  Time      : ${timeStr} (${duration} minutes)
+  Candidate : ${r.cand.name}
+  Panel     : ${panel}
+  Location  : Video Call (add link below)
+────────────────────────────────────────
+
+Joining Link: [Paste your Google Meet / Zoom / Teams link here]
+
+The .ics calendar invite is attached. Please add it to your calendar.
+Kindly be online 5 minutes before the start time.
+
+Best regards,
+HR / Recruiting Team`;
+
+    blk.innerHTML=`
+      <div class="sum-grid">
+        <div class="sum-panel"><div class="sum-lbl">Candidate</div><div class="sum-val">${r.cand.name}</div></div>
+        <div class="sum-panel"><div class="sum-lbl">Role</div><div class="sum-val">${r.cand.role}</div></div>
+        <div class="sum-panel"><div class="sum-lbl">Date</div><div class="sum-val big">${fmtDate(s.date)}</div></div>
+        <div class="sum-panel"><div class="sum-lbl">Time</div><div class="sum-val big">${timeStr}</div></div>
+      </div>
+      <div class="sum-panel" style="margin-bottom:12px">
+        <div class="sum-lbl">Interview Panel</div>
+        <div class="att-row">${[r.cand.name,...s.interviewers].map(n=>`<div class="att-chip">✓ ${n}</div>`).join("")}</div>
+      </div>
+      <div class="sum-panel" style="margin-bottom:12px">
+        <div class="sum-lbl">Reasoning</div>
+        <p style="font-size:12px;color:var(--ink2);line-height:1.65;margin-top:5px">
+          This slot has ${s.coverage}% panel coverage on ${fmtDate(s.date)} with a ${Math.round(s.duration/60*10)/10}-hour overlap window.
+          All key interviewers (${s.interviewers.join(", ")}) are available — maximising panel input for the hiring decision.
+        </p>
+      </div>
+      <div class="out-panel">
+        <div class="out-title">🤖 Automated Outputs</div>
+        <div class="out-item"><div class="out-dot g"></div><div><div class="out-txt">📅 .ics Calendar Invite</div><div class="out-sub">Google Calendar, Outlook, Apple Calendar compatible</div></div></div>
+        <div class="out-item"><div class="out-dot"></div><div><div class="out-txt">📧 Invite Email — copy and send instantly</div><div class="out-sub">All details prefilled, just add the video link</div></div></div>
+        <div class="out-item"><div class="out-dot b"></div><div><div class="out-txt">📄 Interview Brief — shareable panel summary</div><div class="out-sub">Candidate info, slot, coverage, reasoning</div></div></div>
+      </div>
+      <div class="acts">
+        <button class="abt pri" onclick="downloadICS(${i})">📅 Download .ics</button>
+        <button class="abt grn" id="copyBtn_${i}" onclick="copyEmail(${i})">📧 Copy Email</button>
+        <button class="abt out" onclick="downloadBrief(${i})">📄 Download Brief</button>
+        <button class="abt out" onclick="resetForm()">↩ New Session</button>
+      </div>
+      <div class="email-box">
+        <div class="email-hd">📧 Email Draft</div>
+        <div class="email-body" id="emailBody_${i}">${email}</div>
+      </div>`;
+
+    // Store email & slot data on window for actions
+    window["_email_"+i]=email;
+    window["_slot_"+i]=s;
+    window["_sess_"+i]={cand:r.cand, duration};
+
+    blocksEl.appendChild(blk);
+  });
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function switchConfTab(idx){
+  document.querySelectorAll(".conf-tab").forEach((t,i)=>t.classList.toggle("active",i===idx));
+  document.querySelectorAll(".conf-block").forEach((b,i)=>b.classList.toggle("active",i===idx));
+}
+
+// ═══════════════════════════════════════════════════
+// AUTOMATIONS
+// ═══════════════════════════════════════════════════
+function copyEmail(i){
+  const txt=window["_email_"+i]; if(!txt) return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById("copyBtn_"+i);
+    btn.textContent="✓ Copied!";
+    setTimeout(()=>btn.textContent="📧 Copy Email",2200);
+  });
+}
+
+function downloadICS(i){
+  const s=window["_slot_"+i], sess=window["_sess_"+i]; if(!s) return;
+  const startDate=new Date(s.date+"T00:00:00");
+  startDate.setHours(Math.floor(s.start/60), s.start%60, 0, 0);
+  const endDate=new Date(startDate.getTime()+Number(sess.duration)*60000);
+  const fmt=d=>d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,"0")+String(d.getUTCDate()).padStart(2,"0")
+    +"T"+String(d.getUTCHours()).padStart(2,"0")+String(d.getUTCMinutes()).padStart(2,"0")+"00Z";
+  const attendees=s.interviewers.map(n=>`ATTENDEE;CN="${n}":mailto:panel@company.com`).join("\r\n");
+  const ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//SlotSync//EN\r\nBEGIN:VEVENT\r\nUID:${Date.now()}@slotsync\r\nDTSTAMP:${fmt(new Date())}\r\nDTSTART:${fmt(startDate)}\r\nDTEND:${fmt(endDate)}\r\nSUMMARY:Interview – ${sess.cand.name} | ${sess.cand.role}\r\nDESCRIPTION:Candidate: ${sess.cand.name}\\nRole: ${sess.cand.role}\\nPanel: ${s.interviewers.join(", ")}\r\nLOCATION:Video Call (link TBD)\r\n${attendees}\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+  dlBlob(ics,`interview_${sess.cand.name.replace(/\s+/g,"_")}.ics`,"text/calendar");
+}
+
+function downloadBrief(i){
+  const s=window["_slot_"+i], sess=window["_sess_"+i]; if(!s) return;
+  const text=`INTERVIEW BRIEF\n${"═".repeat(48)}\n\nCandidate  : ${sess.cand.name}\nRole       : ${sess.cand.role}\nDate       : ${fmtDate(s.date)}\nTime       : ${minsTo12(s.start)} – ${minsTo12(s.end)} (${sess.duration} min)\nPanel      : ${s.interviewers.join(", ")}\nCoverage   : ${s.coverage}%\n\nREASONING\n${"─".repeat(48)}\nThis slot has ${s.coverage}% panel coverage with a ${Math.round(s.duration/60*10)/10}-hour overlap window.\nAll key interviewers are available, maximising hiring decision quality.\n\n${"─".repeat(48)}\nGenerated by SlotSync – Interview Scheduling Automation\n`;
+  dlBlob(text,`brief_${sess.cand.name.replace(/\s+/g,"_")}.txt`,"text/plain");
+}
+
+function dlBlob(content,filename,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════
+function resetForm(){
+  hide("resultsSection");hide("loadingSection");hide("errorSection");hide("confirmedSection");
+  show("formSection"); setStep(1);
+  selections={}; allResults=[];
+}
+
+// ═══════════════════════════════════════════════════
+// INIT — one blank candidate + 3 pre-filled interviewers
+// ═══════════════════════════════════════════════════
+addCandidate();
+
+const tod=new Date();
+function dOff(n){const d=new Date(tod);d.setDate(d.getDate()+n);return d.toISOString().split("T")[0]}
+
+addInterviewer("Ravi Kumar (Hiring Manager)",[
+  {date:dOff(1),from:"15:00",to:"18:00"},
+  {date:dOff(3),from:"10:00",to:"12:00"}
+]);
+addInterviewer("Sneha Patel (Tech Lead)",[
+  {date:dOff(1),from:"13:00",to:"16:00"},
+  {date:dOff(4),from:"10:00",to:"13:00"}
+]);
+addInterviewer("Arjun Mehta (HR)",[
+  {date:dOff(1),from:"14:00",to:"17:00"},
+  {date:dOff(3),from:"11:00",to:"14:00"}
+]);
+</script>
+</body>
+</html>
